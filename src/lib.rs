@@ -44,7 +44,8 @@ pub struct Bundle {
     pub store_id: Option<String>,
     #[serde(rename = "HomebrewID", skip_serializing_if = "Option::is_none")]
     pub homebrew_id: Option<String>,
-    pub exec: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exec: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[serde(
@@ -170,16 +171,14 @@ where
 
 pub struct BundleConfigBuilder {
     name: String,
-    bundle_type: BundleType,
-    exec: String,
+    bundle_type: BundleType
 }
 
 impl BundleConfigBuilder {
-    pub fn new(name: String, bundle_type: BundleType, exec: String) -> Self {
+    pub fn new(name: String, bundle_type: BundleType) -> Self {
         Self {
             name,
-            bundle_type,
-            exec,
+            bundle_type
         }
     }
 
@@ -187,7 +186,7 @@ impl BundleConfigBuilder {
         HomebrewBundleConfigBuilder {
             name: self.name,
             bundle_type: self.bundle_type,
-            exec: self.exec,
+            exec: None,
             homebrew_id: id,
             launcher: None,
             prefer_xbox_mode: false,
@@ -199,7 +198,7 @@ impl BundleConfigBuilder {
         StoreBundleConfigBuilder {
             name: self.name,
             bundle_type: self.bundle_type,
-            exec: self.exec,
+            exec: None,
             store_id: id,
             launcher: None,
             launcher_exec: None,
@@ -214,9 +213,9 @@ impl BundleConfigBuilder {
 pub struct HomebrewBundleConfigBuilder {
     name: String,
     bundle_type: BundleType,
-    exec: String,
     homebrew_id: String,
 
+    exec: Option<String>,
     version: Option<String>,
     prefer_xbox_mode: bool,
     launcher: Option<String>,
@@ -235,6 +234,10 @@ impl HomebrewBundleConfigBuilder {
         self.launcher = Some(launcher);
         self
     }
+    pub fn exec(mut self, exec: String) -> Self {
+        self.exec = Some(exec);
+        self
+    }
     pub fn set_version(&mut self, version: Option<String>) -> &mut Self {
         self.version = version;
         self
@@ -245,6 +248,10 @@ impl HomebrewBundleConfigBuilder {
     }
     pub fn set_requires_launcher(&mut self, launcher: Option<String>) -> &mut Self {
         self.launcher = launcher;
+        self
+    }
+    pub fn set_exec(&mut self, exec: Option<String>) -> &mut Self {
+        self.exec = exec;
         self
     }
 
@@ -270,9 +277,9 @@ impl HomebrewBundleConfigBuilder {
 pub struct StoreBundleConfigBuilder {
     name: String,
     bundle_type: BundleType,
-    exec: String,
     store_id: String,
 
+    exec: Option<String>,
     version: Option<String>,
     background: bool,
     prefer_xbox_mode: bool,
@@ -308,6 +315,11 @@ impl StoreBundleConfigBuilder {
         self
     }
 
+    pub fn exec(mut self, exec: String) -> Self {
+        self.exec = Some(exec);
+        self
+    }
+
     pub fn set_version(&mut self, version: Option<String>) -> &mut Self {
         self.version = version;
         self
@@ -336,6 +348,11 @@ impl StoreBundleConfigBuilder {
         self
     }
 
+    pub fn set_exec(&mut self, exec: Option<String>) -> &mut Self {
+        self.exec = exec;
+        self
+    }
+
     pub fn build(self) -> BundleConfig {
         BundleConfig {
             bundle: Bundle {
@@ -356,8 +373,8 @@ impl StoreBundleConfigBuilder {
 }
 
 impl BundleConfig {
-    pub fn builder(name: String, bundle_type: BundleType, exec: String) -> BundleConfigBuilder {
-        BundleConfigBuilder::new(name, bundle_type, exec)
+    pub fn builder(name: String, bundle_type: BundleType) -> BundleConfigBuilder {
+        BundleConfigBuilder::new(name, bundle_type)
     }
 
     pub fn from_read<R: Read>(read: R) -> BundleResult<Self> {
@@ -409,7 +426,7 @@ LauncherExec=TestStoreID_Launcher.exe
             serde_ini::from_str(input).expect("failed to deserialize test input");
         assert_eq!(conf.bundle.name, "Test Name With Spaces");
         assert!(matches!(conf.bundle.bundle_type, BundleType::Game));
-        assert_eq!(conf.bundle.exec, "TestStoreID.exe");
+        assert_eq!(conf.bundle.exec, Some("TestStoreID.exe".to_string()));
         assert_eq!(conf.bundle.store_id, Some("TestStoreID".to_string()));
         assert_eq!(conf.bundle.background, true);
         assert_eq!(conf.bundle.prefer_xbox_mode, true);
@@ -440,7 +457,7 @@ Launcher=wombat
             serde_ini::from_str(input).expect("failed to deserialize test input");
         assert_eq!(conf.bundle.name, "Test Name With Spaces");
         assert!(matches!(conf.bundle.bundle_type, BundleType::Application));
-        assert_eq!(conf.bundle.exec, "TestHomebrewID.exe");
+        assert_eq!(conf.bundle.exec, Some("TestHomebrewID.exe".to_string()));
         assert_eq!(conf.bundle.homebrew_id, Some("TestHomebrewID".to_string()));
         assert_eq!(conf.bundle.background, false);
         assert_eq!(conf.bundle.prefer_xbox_mode, true);
@@ -464,7 +481,7 @@ LauncherTags=Tag1;Tag2;Tag3;Tag4
         assert_eq!(conf.bundle.name, "TestName");
         assert!(matches!(conf.bundle.bundle_type, BundleType::Game));
         assert_eq!(conf.bundle.store_id, Some("TestStoreID".to_string()));
-        assert_eq!(conf.bundle.exec, "TestStoreID.exe");
+        assert_eq!(conf.bundle.exec, Some("TestStoreID.exe".to_string()));
         assert_eq!(
             conf.bundle.launcher_tags,
             vec!["Tag1", "Tag2", "Tag3", "Tag4"]
@@ -486,7 +503,7 @@ LauncherTags=
         assert_eq!(conf.bundle.name, "TestName");
         assert!(matches!(conf.bundle.bundle_type, BundleType::Game));
         assert_eq!(conf.bundle.store_id, Some("TestStoreID".to_string()));
-        assert_eq!(conf.bundle.exec, "TestStoreID.exe");
+        assert_eq!(conf.bundle.exec, Some("TestStoreID.exe".to_string()));
         assert_eq!(conf.bundle.launcher_tags, Vec::<String>::new());
     }
 
@@ -504,7 +521,7 @@ Exec=TestStoreID.exe
         assert_eq!(conf.bundle.name, "TestName");
         assert!(matches!(conf.bundle.bundle_type, BundleType::Game));
         assert_eq!(conf.bundle.store_id, Some("TestStoreID".to_string()));
-        assert_eq!(conf.bundle.exec, "TestStoreID.exe");
+        assert_eq!(conf.bundle.exec, Some("TestStoreID.exe".to_string()));
         assert_eq!(conf.bundle.launcher_tags, Vec::<String>::new());
     }
 }
