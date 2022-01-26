@@ -223,30 +223,37 @@ impl HomebrewBundleConfigBuilder {
         self.version = Some(version);
         self
     }
+
     pub fn prefer_xbox_mode(mut self, prefer_xbox_mode: bool) -> Self {
         self.prefer_xbox_mode = prefer_xbox_mode;
         self
     }
+
     pub fn requires_launcher(mut self, launcher: String) -> Self {
         self.launcher = Some(launcher);
         self
     }
+
     pub fn exec(mut self, exec: String) -> Self {
         self.exec = Some(exec);
         self
     }
+
     pub fn set_version(&mut self, version: Option<String>) -> &mut Self {
         self.version = version;
         self
     }
+
     pub fn set_prefer_xbox_mode(&mut self, prefer_xbox_mode: Option<bool>) -> &mut Self {
         self.prefer_xbox_mode = prefer_xbox_mode.unwrap_or_default();
         self
     }
+
     pub fn set_requires_launcher(&mut self, launcher: Option<String>) -> &mut Self {
         self.launcher = launcher;
         self
     }
+
     pub fn set_exec(&mut self, exec: Option<String>) -> &mut Self {
         self.exec = exec;
         self
