@@ -34,7 +34,7 @@ pub enum BundleType {
     LauncherOnly,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase", deny_unknown_fields)]
 pub struct Bundle {
     pub name: String,
@@ -171,15 +171,12 @@ where
 
 pub struct BundleConfigBuilder {
     name: String,
-    bundle_type: BundleType
+    bundle_type: BundleType,
 }
 
 impl BundleConfigBuilder {
     pub fn new(name: String, bundle_type: BundleType) -> Self {
-        Self {
-            name,
-            bundle_type
-        }
+        Self { name, bundle_type }
     }
 
     pub fn homebrew_id(self, id: String) -> HomebrewBundleConfigBuilder {
