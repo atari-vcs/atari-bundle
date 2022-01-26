@@ -13,6 +13,10 @@ use strum::{Display, EnumString};
 use thiserror::Error;
 use zip::{read::ZipArchive, result::ZipError, write::ZipWriter};
 
+fn is_false(b: &bool) -> bool {
+    !b
+}
+
 #[derive(Debug, Error)]
 pub enum BundleError {
     #[error("error opening zipfile: {0}")]
@@ -53,14 +57,16 @@ pub struct Bundle {
     #[serde(
         default,
         serialize_with = "ser_keyfile_bool",
-        deserialize_with = "de_keyfile_bool"
+        deserialize_with = "de_keyfile_bool",
+        skip_serializing_if = "is_false"
     )]
     pub background: bool,
     #[serde(
         rename = "PreferXBoxMode",
         default,
         serialize_with = "ser_keyfile_bool",
-        deserialize_with = "de_keyfile_bool"
+        deserialize_with = "de_keyfile_bool",
+        skip_serializing_if = "is_false"
     )]
     pub prefer_xbox_mode: bool,
 
