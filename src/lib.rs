@@ -47,6 +47,8 @@ pub struct Bundle {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exec: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub encrypted_image: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[serde(
         default,
@@ -203,6 +205,7 @@ impl BundleConfigBuilder {
             background: false,
             prefer_xbox_mode: false,
             version: None,
+            encrypted_image: None,
         }
     }
 }
@@ -273,6 +276,7 @@ impl HomebrewBundleConfigBuilder {
                 launcher: self.launcher,
                 launcher_tags: Vec::new(),
                 launcher_exec: None,
+                encrypted_image: None,
             },
         }
     }
@@ -290,6 +294,7 @@ pub struct StoreBundleConfigBuilder {
     launcher: Option<String>,
     launcher_tags: Vec<String>,
     launcher_exec: Option<String>,
+    encrypted_image: Option<String>,
 }
 
 impl StoreBundleConfigBuilder {
@@ -321,6 +326,12 @@ impl StoreBundleConfigBuilder {
 
     pub fn exec(mut self, exec: String) -> Self {
         self.exec = Some(exec);
+        self
+    }
+
+    /// Set the store bundle config builder's encrypted image.
+    pub fn encrypted_image(&mut self, encrypted_image: String) -> &mut Self {
+        self.encrypted_image = Some(encrypted_image);
         self
     }
 
@@ -371,6 +382,7 @@ impl StoreBundleConfigBuilder {
                 launcher: self.launcher,
                 launcher_tags: self.launcher_tags,
                 launcher_exec: self.launcher_exec,
+                encrypted_image: self.encrypted_image,
             },
         }
     }
@@ -527,5 +539,32 @@ Exec=TestStoreID.exe
         assert_eq!(conf.bundle.store_id, Some("TestStoreID".to_string()));
         assert_eq!(conf.bundle.exec, Some("TestStoreID.exe".to_string()));
         assert_eq!(conf.bundle.launcher_tags, Vec::<String>::new());
+    }
+
+    #[test]
+    fn test_deserialize_encrypted_image() {
+        let input = r#"
+[Bundle]
+Name=Gamepad
+Type=Application
+StoreID=DummyStoreID
+Version=5
+EncryptedImage=bundle.img
+"#;
+        fn check(conf: &BundleConfig) {
+            assert_eq!(conf.bundle.name, "Gamepad");
+            assert!(matches!(conf.bundle.bundle_type, BundleType::Application));
+            assert_eq!(conf.bundle.store_id, Some("DummyStoreID".to_string()));
+            assert_eq!(conf.bundle.launcher_tags, Vec::<String>::new());
+            assert_eq!(conf.bundle.encrypted_image, Some("bundle.img".to_string()));
+        }
+        let conf: BundleConfig =
+            serde_ini::from_str(input).expect("failed to deserialize test input");
+        check(&conf);
+
+        let c = serde_ini::to_string(&conf).expect("Failed to serialize");
+        let conf: BundleConfig =
+            serde_ini::from_str(&c).expect("failed to re-deserialize test input");
+        check(&conf);
     }
 }
