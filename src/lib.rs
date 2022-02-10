@@ -1,3 +1,8 @@
+/*
+ * Copyright 2022 Collabora, Ltd.
+ *
+ * SPDX-License-Identifier: MIT
+ */
 use std::fmt::{self, Display, Formatter};
 use std::fs::File;
 use std::io::{self, Read, Seek, Write};
