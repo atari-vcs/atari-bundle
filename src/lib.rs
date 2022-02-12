@@ -88,7 +88,7 @@ pub struct Bundle {
     pub launcher_exec: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct BundleConfig {
     pub bundle: Bundle,
